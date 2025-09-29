@@ -3,6 +3,7 @@ import React from "react";
 import TodoFilters from "./TodoFilters";
 import TodoForm from "./TodoForm";
 import TodoItem from "./TodoItem";
+import Footer from "./Footer";
 import { useDispatch, useSelector } from "react-redux";
 import {
   selectFilter,
@@ -187,8 +188,7 @@ function TodoApp() {
         </div>
 
         {/* {Footer Info} */}
-        <div className="text-center mt-6 text-sm text-gray-700">Footer</div>
-      </div>
+        <Footer />      </div>
     </div>
   );
 }

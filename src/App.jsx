@@ -1,5 +1,6 @@
 import React from 'react'
 import TodoApp from './components/TodoApp'
+import Footer from './components/Footer'
 import { Provider } from 'react-redux'
 import { store } from './store/store'
 
