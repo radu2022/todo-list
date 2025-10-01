@@ -1,28 +1,26 @@
-import { Calendar, Check, Edit3, Trash2 } from "lucide-react";
+import { Calendar, Check, Edit3, Trash2, ArchiveRestore } from "lucide-react";
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { deleteTodo, toggleTodo, updateTodo } from "../store/todoSlice";
-import TodoForm from "./TodoForm";
+import { deleteTodo, toggleTodo, restoreTodo } from "../store/todoSlice";
 
-function TodoItem({ todo, index }) {
+function TodoItem({ todo, index, onEdit }) {
   const dispatch = useDispatch();
-  const [isEditing, setIsEditing] = useState(false);
-  const [isDeleting, setIsDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleToggle = () => {
     dispatch(toggleTodo(todo.id));
   };
 
   const handleDelete = () => {
-    setIsDelete(true);
+    setIsDeleting(true);
     setTimeout(() => {
       dispatch(deleteTodo(todo.id));
     }, 200);
   };
 
-  const handleUpdate = (text) => {
-    dispatch(updateTodo({ id: todo.id, updates: { text: text.trim() } }));
-    setIsEditing(false);
+  const handleRestore = () => {
+    setIsDeleting(false);
+    dispatch(restoreTodo(todo.id));
   };
 
   const formatDate = (dateString) => {
@@ -34,19 +32,6 @@ function TodoItem({ todo, index }) {
       minute: "2-digit",
     }).format(date);
   };
-
-  if (isEditing) {
-    return (
-      <div className="p-4 bg-gray-100">
-        <TodoForm
-          initialValue={todo.text}
-          onSubmit={handleUpdate}
-        //   onCancel={() => setIsEditing(false)}
-          placeholder="Update your todo"
-        />
-      </div>
-    );
-  }
 
   return (
     <div
@@ -60,7 +45,7 @@ function TodoItem({ todo, index }) {
         animation: "slideInUp 0.3s ease-out forwards",
       }}
     >
-      {/* {Toggle Button Checkbox} */}
+      {/* Toggle Button Checkbox */}
       <div className="flex items-start gap-3">
         <button
           className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 mt-0.5 ${
@@ -72,9 +57,10 @@ function TodoItem({ todo, index }) {
         >
           {todo.completed && <Check size={14} />}
         </button>
-        {/* {Todo Content} */}
+
+        {/* Todo Content */}
         <div className="flex-1 min-w-0">
-          <div className={`text-gray-900 leading-relaxed`}>{todo.text}</div>
+          <div className="text-gray-900 leading-relaxed">{todo.text}</div>
           <div className="flex items-center gap-4 mt-2 text-x text-gray-600">
             <div className="flex items-center gap-1">
               <Calendar size={14} />
@@ -83,28 +69,36 @@ function TodoItem({ todo, index }) {
               </span>
             </div>
             <span className="text-x font-light text-gray-600 hover:text-gray-800 cursor-pointer pl-2">
-              Update {formatDate(todo.updatedAt)}
+              Updated {formatDate(todo.updatedAt)}
             </span>
           </div>
         </div>
 
-        {/* {Action Buttons} */}
+        {/* Action Buttons */}
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
-          {/* Edit Button */}
-          <button
-            className="p-2 text-gray-500 hover:text-green-600 hover:bg-gray-200 rounded-lg transition-all duration-200"
-            onClick={() => setIsEditing(true)}
-          >
-            <Edit3 size={16} />
-          </button>
+          {todo.deleted ? (
+            <button onClick={handleRestore}>
+              <ArchiveRestore size={16} />
+            </button>
+          ) : (
+            <>
+              {/* Edit Button */}
+              <button
+                className="p-2 text-gray-500 hover:text-green-600 hover:bg-gray-200 rounded-lg transition-all duration-200"
+                onClick={onEdit}
+              >
+                <Edit3 size={16} />
+              </button>
 
-          {/* Deletebutton */}
-          <button
-            className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-200 rounded-lg transition-all duration-200"
-            onClick={handleDelete}
-          >
-            <Trash2 size={16} />
-          </button>
+              {/* Delete Button */}
+              <button
+                className="p-2 text-gray-500 hover:text-red-600 hover:bg-gray-200 rounded-lg transition-all duration-200"
+                onClick={handleDelete}
+              >
+                <Trash2 size={16} />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

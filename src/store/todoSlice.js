@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+// import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 
 const loadTodos = () => {
@@ -23,6 +24,7 @@ const initialState = {
     filter: "all",
     isAddingTodo: false,
 };
+
 
 const todoSlice = createSlice({
     name: "todos",
@@ -55,18 +57,33 @@ const todoSlice = createSlice({
         },
 
     deleteTodo: (state, action) => {
-            state.items = state.items.filter((todo) => todo.id !== action.payload);
+    const todo = state.items.find((todo) => todo.id === action.payload);
+    if (todo) {
+        todo.deleted = true;
+        todo.updatedAt = new Date().toISOString();
+        saveTodos(state.items);
+    }
+},
+restoreTodo: (state, action) => {
+        const todo = state.items.find((todo) => todo.id === action.payload);
+        if (todo && todo.deleted) {
+            delete todo.deleted;
+            todo.updatedAt = new Date().toISOString();
             saveTodos(state.items);
-        },  
+        }
+    },
     
     updateTodo: (state, action) => {
-            const { id, updates } = action.payload;
-            const todo = state.items.find((todo) => todo.id === id);
-
-            if (todo) {
-                Object.assign(todo, updates, { updatedAt: new Date().toISOString() });
-            }
-        },
+      const { id, updates } = action.payload;
+      // Create a new array with updated todo
+      state.items = state.items.map((todo) =>
+        todo.id === id
+          ? { ...todo, ...updates, updatedAt: new Date().toISOString() }
+          : todo
+      );
+      // Persist updated todos if saveTodos is used
+      saveTodos(state.items);
+    },
 
     setFilter: (state, action) => {
         state.filter = action.payload;
@@ -76,11 +93,12 @@ const todoSlice = createSlice({
         const hasIncomplete = state.items.some((todo)=> !todo.completed);
         state.items.forEach((todo) => {
         todo.completed = hasIncomplete;
-        todo.updatedAt = new Date().toDateString();
+        todo.updatedAt = new Date().toISOString();
         saveTodos(state.items);
         });
     },
 
+    
     clearCompleted: (state) => {
         state.items = state.items.filter((todo)=> !todo.completed);
         saveTodos(state.items);
@@ -89,11 +107,17 @@ const todoSlice = createSlice({
 });
 
 
+// // Async
+// export const fetchTodos = createAsyncThunk("todos/fetchTodos", async)
+
+
+
 export const { 
     setIsAddingTodo, 
     addTodo, 
     toggleTodo, 
-    deleteTodo, 
+    deleteTodo,
+    restoreTodo, 
     updateTodo, 
     setFilter, 
     markAllComplete, 
