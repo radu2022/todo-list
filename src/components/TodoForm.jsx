@@ -2,12 +2,13 @@ import { Check, X } from "lucide-react";
 import React, { useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { addTodo, setIsAddingTodo } from "../store/todoSlice";
-
+import { Input } from "../components/ui/input";
 function TodoForm({
-  OnSubmit,
+  onSubmit,
   OnCancel,
   initialValue = "",
   placeholder = "Add a new Todo..",
+  isEditing,
 }) {
   const dispatch = useDispatch();
   const [text, setText] = useState(initialValue);
@@ -18,9 +19,9 @@ function TodoForm({
     const trimmedtext = text.trim();
 
     if (trimmedtext) {
-      if (onsubmit) {
+      if (onSubmit) {
         // For Editing
-        onsubmit(trimmedtext);
+        onSubmit(trimmedtext);
       } else {
         dispatch(addTodo(trimmedtext));
       }
@@ -29,30 +30,30 @@ function TodoForm({
   };
 
   const handleCancel = () => {
-    if(OnCancel){
-        OnCancel();
-    }else{
-        dispatch(setIsAddingTodo(false))
+    if (OnCancel) {
+      OnCancel();
+    } else {
+      dispatch(setIsAddingTodo(false));
     }
     setText("");
-  }
+  };
 
   const handleKeyDown = (e) => {
     if (e.key === "Escape") {
-        handleCancel();
+      handleCancel();
     }
-  }
+  };
 
   return (
     <form className="flex items-center gap-3" onSubmit={handleSubmit}>
       <div className="flex-1">
-        <input
+        <Input
           ref={inputRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={placeholder}
           onKeyDown={handleKeyDown}
-          className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all duration-200 bg-white/90 backdrop-blur-sm text-gray-800 placeholder-gray-600 maxLength={500}"
+          className="text-black"
         />
       </div>
       <div className="flex items-center gap-2">

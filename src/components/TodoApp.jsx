@@ -1,10 +1,12 @@
 import { CheckCircle2, Circle, Filter, Plus, Trash2 } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import TodoFilters from "./TodoFilters";
 import TodoForm from "./TodoForm";
 import TodoItem from "./TodoItem";
 import Footer from "./Footer";
-import { useDispatch, useSelector } from "react-redux";
+import { Button } from "../components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import {
   selectFilter,
   selectFilteredTodos,
@@ -17,6 +19,7 @@ import {
   markAllComplete,
   setFilter,
   setIsAddingTodo,
+  updateTodo,
 } from "../store/todoSlice";
 
 function TodoApp() {
@@ -26,14 +29,20 @@ function TodoApp() {
   const stats = useSelector(selectTodosStats);
   const filter = useSelector(selectFilter);
   const isAddingTodo = useSelector(selectIsAddingTodo);
-  console.log(isAddingTodo);
+  const [editingTodo, setEditingTodo] = useState(null); // Track the todo being edited
 
   const handleFilterChange = (newFilter) => {
     dispatch(setFilter(newFilter));
   };
 
-  const handleAddTodoClic = () => {
+  const handleAddTodoClick = () => {
     dispatch(setIsAddingTodo(true));
+    setEditingTodo(null); // Ensure editing is disabled when adding
+  };
+
+  const handleEditTodo = (todo) => {
+    dispatch(setIsAddingTodo(false)); // Disable add mode
+    setEditingTodo(todo); // Set the todo to edit
   };
 
   const handleMarkComplete = () => {
@@ -44,16 +53,35 @@ function TodoApp() {
     dispatch(clearCompleted());
   };
 
+  const handleFormSubmit = (text) => {
+    if (editingTodo) {
+      console.log("red", text);
+      // Update existing todo
+      dispatch(
+        updateTodo({ id: editingTodo.id, updates: { text: text.trim() } })
+      );
+      setEditingTodo(null); // Exit edit mode
+    } else {
+      // Add new todo (handled by TodoForm and Redux)
+      dispatch(setIsAddingTodo(false)); // Exit add mode
+    }
+  };
+
+  const handleFormCancel = () => {
+    dispatch(setIsAddingTodo(false));
+    setEditingTodo(null); // Exit edit or add mode
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        {/* {Header} */}
+        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">TodoFlow</h1>
           <p>Organize your life, one task at a time</p>
         </div>
 
-        {/* {Stats Card} */}
+        {/* Stats Card */}
         {stats.total > 0 && (
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border border-gray-300 shadow-lg">
             <div className="flex items-center justify-between mb-4">
@@ -61,60 +89,48 @@ function TodoApp() {
                 Progress Overview
               </h2>
               <div className="text-2xl font-bold text-green-600">
-                {/* {Stats Completed Logics} */}
                 {stats.completionPercentage}%
               </div>
             </div>
-            <div className="w-full bg-gray-300 rounded-full h-3 mb-4">
-              {/* {Preogressbar} */}
-              <div
-                className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${stats.completionPercentage}%` }}
-              ></div>
-            </div>
-
-            {/* {Stats} */}
-            <div className="grid grid-cols-3 gap-4 text-center">
+            <Progress
+              value={stats.completionPercentage}
+              className="w-full h-3 bg-white border-1 [&>div]:bg-green-500"
+            />
+            <div className="grid grid-cols-4 gap-5 text-center self-center">
               <div>
                 <div className="text-2xl font-bold text-gray-800">
-                  {/* {Status Total Logic} */}
                   {stats.total}
                 </div>
                 <div className="text-sm text-gray-600">Total</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-gray-800">
-                  {/* {Status Active Logic} */}
                   {stats.active}
                 </div>
                 <div className="text-sm text-gray-600">Active</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-gray-800">
-                  {/* {Status Completed Logic} */}
                   {stats.completed}
                 </div>
                 <div className="text-sm text-gray-600">Completed</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-800">
+                  {stats.completed}
+                </div>
+                <div className="text-sm text-gray-600">Deleted</div>
               </div>
             </div>
           </div>
         )}
 
-        {/* {Main Todo Container} */}
+        {/* Main Todo Container */}
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-lg overflow-hidden mt-1">
-          {/* {Action Bar} */}
-
+          {/* Action Bar */}
           <div className="p-6 border-b-2 border-gray-600 shadow-lg">
-            <div className="flex items-center justify-between mb-4 ">
-              <button
-                className="flex items-center gap-3 bg-white hover:bg-gray-400 text-gray-500 font-semibold py-2 px-4 border border-gray-400 rounded shadow"
-                onClick={handleAddTodoClic}
-              >
-                <Plus size={20} />
-                Add Todo
-              </button>
-
-              {/* {Clear and Delete Buttons} */}
+            <div className="flex items-center justify-between mb-4">
+              <Button onClick={handleAddTodoClick}>Add</Button>
               {stats.total > 0 && (
                 <div className="flex items-center gap-2">
                   {stats.completed > 0 && (
@@ -138,20 +154,29 @@ function TodoApp() {
                 </div>
               )}
             </div>
-            {/* {Todo Filter I will add Logics} */}
             <TodoFilters
               currentfilter={filter}
               stats={stats}
               onFilterChange={handleFilterChange}
             />
           </div>
-          {isAddingTodo && (
-            <div className="p-6 border-b border-gray-300 bg-gray-100 font-light text-gray-200">
-              <TodoForm placeholder="what need to be done" />
+
+          {/* Todo Form for both adding and editing */}
+          {(isAddingTodo || editingTodo) && (
+            <div className="p-6 border-b border-gray-300 bg-gray-100 font-light text-gray-100">
+              <TodoForm
+                placeholder={
+                  editingTodo ? "Update your todo" : "What needs to be done?"
+                }
+                initialValue={editingTodo ? editingTodo.text : ""}
+                onSubmit={editingTodo?  handleFormSubmit:null}
+                onCancel={handleFormCancel}
+                isEditing={!!editingTodo}
+              />
             </div>
           )}
 
-          {/* {Todo List} */}
+          {/* Todo List */}
           <div className="max-h-96 overflow-y-auto">
             {filterTodos.length === 0 ? (
               <div className="p-12 text-center">
@@ -167,28 +192,36 @@ function TodoApp() {
                   <div className="text-gray-600">
                     <Filter size={48} className="mx-auto mb-4 opacity-50" />
                     <p className="text-lg font-medium mb-2 text-gray-800">
-                      No {filter} Todos
-                      <p className="text-sm">
-                        {filter === "active" && "all your todos are completed"}
-                        {filter === "active" &&
-                          "No comleted todos yet, keep going"}
-                      </p>
+                      No {filter} Todos yet
+                    </p>
+                    <p className="text-sm">
+                      {filter === "active" && "All your todos are completed"}
+                      {filter === "completed" &&
+                        "No completed todos yet, keep going"}
+                      {filter === "deleted" &&
+                        "No deleted todos. You're keeping it clean!"}
                     </p>
                   </div>
                 )}
               </div>
             ) : (
               <div className="divide-y divide-gray-300">
-                {filterTodos.map((todo, index) => {
-                  return <TodoItem key={todo.id} todo={todo} index={index} />;
-                })}
+                {filterTodos.map((todo, index) => (
+                  <TodoItem
+                    key={todo.id}
+                    todo={todo}
+                    index={index}
+                    onEdit={() => handleEditTodo(todo)}
+                  />
+                ))}
               </div>
             )}
           </div>
         </div>
 
-        {/* {Footer Info} */}
-        <Footer />      </div>
+        {/* Footer Info */}
+        <Footer />
+      </div>
     </div>
   );
 }
